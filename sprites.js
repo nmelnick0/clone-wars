@@ -6,14 +6,14 @@
 
     var pulse = 0.5 + 0.5 * Math.sin(time * 1.4);
     var water = ctx.createLinearGradient(0, 0, 0, height);
-    water.addColorStop(0, '#06152d');
-    water.addColorStop(0.52, '#082746');
-    water.addColorStop(1, '#03101f');
+    water.addColorStop(0, '#010611');
+    water.addColorStop(0.52, '#031426');
+    water.addColorStop(1, '#01050b');
     ctx.fillStyle = water;
     ctx.fillRect(0, 0, width, height);
 
     // Soft shafts of light make the deep water feel spacious without hiding the player.
-    ctx.globalAlpha = 0.11;
+    ctx.globalAlpha = 0.05;
     ctx.fillStyle = '#39c7d8';
     for (var ray = -1; ray < 7; ray += 1) {
       var rayX = ray * 86 + ((time * 5) % 86) - 34;
@@ -28,7 +28,7 @@
     ctx.globalAlpha = 1;
 
     // Large distant silhouettes suggest an underwater cavern.
-    ctx.fillStyle = '#071b31';
+    ctx.fillStyle = '#020914';
     ctx.beginPath();
     ctx.moveTo(0, height * 0.55);
     ctx.lineTo(width * 0.12, height * 0.44);
@@ -44,7 +44,7 @@
     ctx.fill();
 
     // Slow bubbles are deterministic, so the reduced-motion frame remains complete.
-    ctx.strokeStyle = 'rgba(73, 205, 220, 0.42)';
+    ctx.strokeStyle = 'rgba(73, 205, 220, 0.2)';
     ctx.lineWidth = 2;
     for (var bubble = 0; bubble < 9; bubble += 1) {
       var bx = (bubble * 71 + 28) % width;
@@ -57,7 +57,7 @@
 
     // A small halo behind the player keeps the character legible in the dark water.
     var halo = ctx.createRadialGradient(width * 0.25, height * 0.46, 2, width * 0.25, height * 0.46, 96 + pulse * 8);
-    halo.addColorStop(0, 'rgba(85, 238, 220, 0.12)');
+    halo.addColorStop(0, 'rgba(85, 238, 220, 0.06)');
     halo.addColorStop(1, 'rgba(85, 238, 220, 0)');
     ctx.fillStyle = halo;
     ctx.fillRect(width * 0.25 - 110, height * 0.46 - 110, 220, 220);
@@ -114,6 +114,16 @@
     var glowRadius = size * 0.55;
     ctx.translate(x, y);
     ctx.rotate(tilt);
+
+    // A broad circular pool of light reveals only the nearby water.
+    var pool = ctx.createRadialGradient(0, 0, size * 0.18, 0, 0, size * 2.35);
+    pool.addColorStop(0, 'rgba(164, 255, 242, 0.24)');
+    pool.addColorStop(0.42, 'rgba(89, 223, 215, 0.1)');
+    pool.addColorStop(1, 'rgba(46, 173, 190, 0)');
+    ctx.fillStyle = pool;
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 2.35, 0, Math.PI * 2);
+    ctx.fill();
 
     var glow = ctx.createRadialGradient(size * 0.12, -size * 0.36, 1, size * 0.12, -size * 0.36, glowRadius);
     glow.addColorStop(0, 'rgba(255, 247, 151, 0.7)');
@@ -175,10 +185,13 @@
 
   function drawPipe(ctx, x, gapTop, gapBottom, pipeWidth, height) {
     ctx.save();
+    // The cave walls emerge from the darkness as they approach the angler fish.
+    var reveal = Math.max(0.12, Math.min(1, (210 - x) / 120));
+    ctx.globalAlpha = reveal;
     var outline = '#071322';
-    var wall = '#633d89';
-    var wallLight = '#8b61b5';
-    var wallDark = '#38285e';
+    var wall = '#283d5b';
+    var wallLight = '#58779a';
+    var wallDark = '#14263e';
     var tooth = Math.max(8, Math.min(16, pipeWidth * 0.2));
 
     // Base rectangles guarantee the cave walls fill the collision rectangles.
