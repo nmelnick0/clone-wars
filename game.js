@@ -158,6 +158,8 @@ function addDeepFish() {
     y: fishY,
     width: 92 + (fishMade % 2) * 18,
     height: fishHeight,
+    collisionWidth: (92 + (fishMade % 2) * 18) * 0.68,
+    collisionHeight: fishHeight * 0.68,
     scored: false
   });
   fishMade += 1;
@@ -229,7 +231,7 @@ function frame(now) {
     groundOffset += pipeSpeed * seconds;
     if (pipes.length === 0) addPipe(pipeGap);
     else if (pipes[pipes.length - 1].x <= CONFIG.canvasWidth - CONFIG.pipeSpacing) addPipe(pipeGap);
-    const fishSpawnSpacing = CONFIG.pipeSpacing + 80;
+    const fishSpawnSpacing = CONFIG.pipeSpacing + 140;
     if (CONFIG.fix === 'custom' && (deepFish.length === 0 || deepFish[deepFish.length - 1].x <= CONFIG.canvasWidth - fishSpawnSpacing)) addDeepFish();
     for (const pipe of pipes) {
       pipe.x -= pipeSpeed * seconds;
@@ -237,7 +239,7 @@ function frame(now) {
     }
     pipes = pipes.filter((pipe) => pipe.x + CONFIG.pipeWidth > 0);
     if (CONFIG.fix === 'custom') {
-      const fishSpeed = pipeSpeed * 1.6;
+      const fishSpeed = pipeSpeed * 2;
       for (const fish of deepFish) fish.x -= fishSpeed * seconds;
       deepFish = deepFish.filter((fish) => fish.x + fish.width / 2 > 0);
     }
@@ -247,10 +249,10 @@ function frame(now) {
     const birdBottom = y + CONFIG.birdSize / 2;
     const hitPipe = pipes.some((pipe) => birdRight > pipe.x && birdLeft < pipe.x + CONFIG.pipeWidth && (birdTop < pipe.gapTop || birdBottom > pipe.gapBottom));
     const hitDeepFish = CONFIG.fix === 'custom' && deepFish.some((fish) => {
-      const fishLeft = fish.x - fish.width / 2;
-      const fishRight = fish.x + fish.width / 2;
-      const fishTop = fish.y - fish.height / 2;
-      const fishBottom = fish.y + fish.height / 2;
+      const fishLeft = fish.x - fish.collisionWidth / 2;
+      const fishRight = fish.x + fish.collisionWidth / 2;
+      const fishTop = fish.y - fish.collisionHeight / 2;
+      const fishBottom = fish.y + fish.collisionHeight / 2;
       return birdRight > fishLeft && birdLeft < fishRight && birdBottom > fishTop && birdTop < fishBottom;
     });
     if (birdBottom >= CONFIG.canvasHeight - CONFIG.groundHeight || birdTop <= 0 || hitPipe || hitDeepFish) crash();
