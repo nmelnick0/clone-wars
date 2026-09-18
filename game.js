@@ -76,6 +76,8 @@ let y = CONFIG.canvasHeight / 2;
 let velocity = 0;
 let pipes = [];
 let pipesMade = 0;
+let deepFish = [];
+let fishMade = 0;
 let groundOffset = 0;
 let lastGapTop = (CONFIG.canvasHeight - CONFIG.groundHeight - CONFIG.pipeGap) / 2;
 let score = 0;
@@ -106,6 +108,8 @@ function startGame() {
   velocity = -CONFIG.flapStrength;
   pipes = [];
   pipesMade = 0;
+  deepFish = [];
+  fishMade = 0;
   groundOffset = 0;
   lastGapTop = (CONFIG.canvasHeight - CONFIG.groundHeight - CONFIG.pipeGap) / 2;
   score = checkpoint;
@@ -144,6 +148,60 @@ function addPipe(pipeGap) {
   pipes.push({ x: CONFIG.canvasWidth, gapTop: gapTop, gapBottom: gapBottom, scored: false });
   pipesMade += 1;
 }
+function addDeepFish() {
+  const skyBottom = CONFIG.canvasHeight - CONFIG.groundHeight;
+  const fishHeight = 42 + (fishMade % 3) * 8;
+  const margin = fishHeight / 2 + 18;
+  const fishY = margin + Math.random() * (skyBottom - margin * 2);
+  deepFish.push({
+    x: CONFIG.canvasWidth + 24,
+    y: fishY,
+    width: 92 + (fishMade % 2) * 18,
+    height: fishHeight,
+    scored: false
+  });
+  fishMade += 1;
+}
+function drawDeepFish(fish) {
+  const direction = -1;
+  ctx.save();
+  ctx.translate(fish.x, fish.y);
+  ctx.scale(direction, 1);
+  ctx.fillStyle = '#b91c1c';
+  ctx.strokeStyle = '#120b18';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.ellipse(8, 0, fish.width * 0.38, fish.height * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-fish.width * 0.26, 0);
+  ctx.lineTo(-fish.width * 0.52, -fish.height * 0.48);
+  ctx.lineTo(-fish.width * 0.47, 0);
+  ctx.lineTo(-fish.width * 0.52, fish.height * 0.48);
+  ctx.closePath();
+  ctx.fillStyle = '#7f1d1d';
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#fef3c7';
+  ctx.beginPath();
+  ctx.arc(fish.width * 0.22, -fish.height * 0.18, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#09090b';
+  ctx.beginPath();
+  ctx.arc(fish.width * 0.25, -fish.height * 0.18, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(fish.width * 0.36, fish.height * 0.1);
+  ctx.lineTo(fish.width * 0.22, fish.height * 0.29);
+  ctx.lineTo(fish.width * 0.08, fish.height * 0.1);
+  ctx.closePath();
+  ctx.fillStyle = '#fef3c7';
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
 function crash() {
   state = 'gameover';
   secondsSinceCrash = 0;
@@ -171,23 +229,36 @@ function frame(now) {
     groundOffset += pipeSpeed * seconds;
     if (pipes.length === 0) addPipe(pipeGap);
     else if (pipes[pipes.length - 1].x <= CONFIG.canvasWidth - CONFIG.pipeSpacing) addPipe(pipeGap);
+    if (CONFIG.fix === 'custom' && (deepFish.length === 0 || deepFish[deepFish.length - 1].x <= CONFIG.canvasWidth - 180)) addDeepFish();
     for (const pipe of pipes) {
       pipe.x -= pipeSpeed * seconds;
       if (!pipe.scored && pipe.x + CONFIG.pipeWidth < birdX) { pipe.scored = true; score += 1; play('score'); }
     }
     pipes = pipes.filter((pipe) => pipe.x + CONFIG.pipeWidth > 0);
+    if (CONFIG.fix === 'custom') {
+      for (const fish of deepFish) fish.x -= (pipeSpeed * 1.15) * seconds;
+      deepFish = deepFish.filter((fish) => fish.x + fish.width / 2 > 0);
+    }
     const birdLeft = birdX - CONFIG.birdSize / 2;
     const birdRight = birdX + CONFIG.birdSize / 2;
     const birdTop = y - CONFIG.birdSize / 2;
     const birdBottom = y + CONFIG.birdSize / 2;
     const hitPipe = pipes.some((pipe) => birdRight > pipe.x && birdLeft < pipe.x + CONFIG.pipeWidth && (birdTop < pipe.gapTop || birdBottom > pipe.gapBottom));
-    if (birdBottom >= CONFIG.canvasHeight - CONFIG.groundHeight || birdTop <= 0 || hitPipe) crash();
+    const hitDeepFish = CONFIG.fix === 'custom' && deepFish.some((fish) => {
+      const fishLeft = fish.x - fish.width / 2;
+      const fishRight = fish.x + fish.width / 2;
+      const fishTop = fish.y - fish.height / 2;
+      const fishBottom = fish.y + fish.height / 2;
+      return birdRight > fishLeft && birdLeft < fishRight && birdBottom > fishTop && birdTop < fishBottom;
+    });
+    if (birdBottom >= CONFIG.canvasHeight - CONFIG.groundHeight || birdTop <= 0 || hitPipe || hitDeepFish) crash();
   } else if (state === 'gameover') {
     secondsSinceCrash += seconds;
   }
 
   drawBackground(ctx, CONFIG.canvasWidth, CONFIG.canvasHeight, reduceMotion ? 0 : now / 1000);
   for (const pipe of pipes) drawPipe(ctx, pipe.x, pipe.gapTop, pipe.gapBottom, CONFIG.pipeWidth, CONFIG.canvasHeight - CONFIG.groundHeight);
+  if (CONFIG.fix === 'custom') for (const fish of deepFish) drawDeepFish(fish);
   drawGround(ctx, CONFIG.canvasWidth, CONFIG.canvasHeight, CONFIG.groundHeight, groundOffset);
   drawBird(ctx, birdX, y, CONFIG.birdSize, velocity);
   if (state === 'playing') {
