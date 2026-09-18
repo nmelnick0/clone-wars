@@ -116,13 +116,14 @@
     ctx.rotate(tilt);
 
     // A broad circular pool of light reveals only the nearby water.
-    var pool = ctx.createRadialGradient(0, 0, size * 0.18, 0, 0, size * 2.35);
-    pool.addColorStop(0, 'rgba(164, 255, 242, 0.24)');
-    pool.addColorStop(0.42, 'rgba(89, 223, 215, 0.1)');
+    var pool = ctx.createRadialGradient(0, 0, size * 0.18, 0, 0, size * 4.2);
+    pool.addColorStop(0, 'rgba(164, 255, 242, 0.62)');
+    pool.addColorStop(0.34, 'rgba(89, 223, 215, 0.28)');
+    pool.addColorStop(0.68, 'rgba(46, 173, 190, 0.08)');
     pool.addColorStop(1, 'rgba(46, 173, 190, 0)');
     ctx.fillStyle = pool;
     ctx.beginPath();
-    ctx.arc(0, 0, size * 2.35, 0, Math.PI * 2);
+    ctx.arc(0, 0, size * 4.2, 0, Math.PI * 2);
     ctx.fill();
 
     var glow = ctx.createRadialGradient(size * 0.12, -size * 0.36, 1, size * 0.12, -size * 0.36, glowRadius);
@@ -186,7 +187,7 @@
   function drawPipe(ctx, x, gapTop, gapBottom, pipeWidth, height) {
     ctx.save();
     // The cave walls emerge from the darkness as they approach the angler fish.
-    var reveal = Math.max(0.12, Math.min(1, (210 - x) / 120));
+    var reveal = x >= 220 ? 0.02 : Math.max(0.02, Math.min(1, (220 - x) / 85));
     ctx.globalAlpha = reveal;
     var outline = '#071322';
     var wall = '#283d5b';
