@@ -67,6 +67,30 @@
       gain.connect(context.destination);
       oscillator.start(now);
       oscillator.stop(now + 0.39);
+
+      // Filtered noise gives the crash a short original water-splash texture.
+      const length = Math.floor(context.sampleRate * 0.24);
+      const buffer = context.createBuffer(1, length, context.sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let index = 0; index < length; index += 1) {
+        const fade = 1 - index / length;
+        samples[index] = (Math.random() * 2 - 1) * fade;
+      }
+      const splash = context.createBufferSource();
+      const splashFilter = context.createBiquadFilter();
+      const splashGain = context.createGain();
+      splash.buffer = buffer;
+      splashFilter.type = 'lowpass';
+      splashFilter.frequency.setValueAtTime(1250, now);
+      splashFilter.frequency.exponentialRampToValueAtTime(420, now + 0.2);
+      splashGain.gain.setValueAtTime(0.001, now);
+      splashGain.gain.exponentialRampToValueAtTime(0.18, now + 0.012);
+      splashGain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+      splash.connect(splashFilter);
+      splashFilter.connect(splashGain);
+      splashGain.connect(context.destination);
+      splash.start(now);
+      splash.stop(now + 0.24);
     } catch (error) {}
   }
 
