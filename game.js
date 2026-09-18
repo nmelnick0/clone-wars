@@ -229,14 +229,16 @@ function frame(now) {
     groundOffset += pipeSpeed * seconds;
     if (pipes.length === 0) addPipe(pipeGap);
     else if (pipes[pipes.length - 1].x <= CONFIG.canvasWidth - CONFIG.pipeSpacing) addPipe(pipeGap);
-    if (CONFIG.fix === 'custom' && (deepFish.length === 0 || deepFish[deepFish.length - 1].x <= CONFIG.canvasWidth - 180)) addDeepFish();
+    const fishSpawnSpacing = CONFIG.pipeSpacing + 80;
+    if (CONFIG.fix === 'custom' && (deepFish.length === 0 || deepFish[deepFish.length - 1].x <= CONFIG.canvasWidth - fishSpawnSpacing)) addDeepFish();
     for (const pipe of pipes) {
       pipe.x -= pipeSpeed * seconds;
       if (!pipe.scored && pipe.x + CONFIG.pipeWidth < birdX) { pipe.scored = true; score += 1; play('score'); }
     }
     pipes = pipes.filter((pipe) => pipe.x + CONFIG.pipeWidth > 0);
     if (CONFIG.fix === 'custom') {
-      for (const fish of deepFish) fish.x -= (pipeSpeed * 1.15) * seconds;
+      const fishSpeed = pipeSpeed * 1.6;
+      for (const fish of deepFish) fish.x -= fishSpeed * seconds;
       deepFish = deepFish.filter((fish) => fish.x + fish.width / 2 > 0);
     }
     const birdLeft = birdX - CONFIG.birdSize / 2;
